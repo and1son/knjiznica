@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Izdavanje</title>
+</head>
+<body>
+	{% for key, value in sifra.items() %}
+	<table>
+		<tr>
+			<th>{{ key }}</th>
+		</tr>
+		<tr>
+			<td>{{ value }}</td>
+		</tr>
+		{% endfor %}
+	</table>
+</body>
+</html>

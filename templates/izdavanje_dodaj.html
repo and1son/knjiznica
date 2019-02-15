@@ -1,0 +1,22 @@
+<doctype html>
+<title>Dodaj izdavanje - Python Flask MySQL CRUD</title>
+<h2>Dodaj izdavanje</h2>
+<form method="post" action="/dodaj_izdavanje">
+    <dl>
+		<p>
+			<input name="datum_izdavanja" data-date="" data-date-format="DD MMMM YYYY" value="" type="date" placeholder="Datum izdavanja" autocomplete="off" required>
+		</p>
+		<p>
+			<input name="datum_povratka" data-date="" data-date-format="DD MMMM YYYY" value="" type="date" placeholder="Datum povratka" autocomplete="off" required>
+		</p>
+		<p>
+			<input name="cijena" value="" type="text" placeholder="Cijena" autocomplete="off" required>
+		</p>
+		<p>
+			<input name="izdavatelj" value="" type="number" placeholder="izdavatelj" autocomplete="off" required>
+		</p>		
+    </dl>
+    <p>
+		<input type="submit" value="Submit">
+	</p>
+</form>

@@ -1,0 +1,25 @@
+<doctype html>
+<title>Dodaj knjiga - Python Flask MySQL CRUD</title>
+<h2>Dodaj knjiga</h2>
+<form method="post" action="/dodaj_knjiga">
+    <dl>
+		<p>
+			<input name="Naslov" value="" type="text" placeholder="Naslov" autocomplete="off" required>
+		</p>
+		<p>
+			<input name="Zanr" value="" type="text" placeholder="Zanr" autocomplete="off" required>
+		</p>
+		<p>
+			<input name="Autor" value="" type="text" placeholder="Autor" autocomplete="off" required>
+		</p>
+		<p>
+			<input name="nakladnik" value="" type="number" placeholder="nakladnik" autocomplete="off" required>
+		</p>		
+		<p>
+			<input name="izdavanje" value="" type="number" placeholder="izdavanje" autocomplete="off" required>
+		</p>
+    </dl>
+    <p>
+		<input type="submit" value="Submit">
+	</p>
+</form>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Izdavanje</title>
+</head>
+<body>
+	<table>
+		<tr>
+			<th>Sifra</th>
+			<th>Datum izdavanja</th>
+			<th>Datum povratka</th>
+			<th>Cijena</th>
+			<th>Izdavatelj</th>
+
+		</tr>
+
+		{% for row in izdavanje %}
+		<tr>
+			<td>{{ row[0] }}</td>
+			<td>{{ row[1] }}</td>
+			<td>{{ row[2] }}</td>
+			<td>{{ row[3] }}</td>
+			<td>{{ row[4] }}</td>
+
+		</tr>
+		{% endfor %}
+
+	</table>
+</body>
+</html>
