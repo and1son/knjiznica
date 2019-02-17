@@ -1,0 +1,26 @@
+<doctype html>
+<title>Edit izdavatelja - Python Flask MySQL CRUD</title>
+<h2>Edit izdavatelja</h2>
+<form method="post" action="/edit_izdavatelj">
+    <dl>
+		<p>
+			<input name="sifra" value="{{ row[0] }}" type="hidden">
+			<input name="Ime" value="{{ row[1] }}" type="text" placeholder="Ime" autocomplete="off" required>
+		</p>
+		<p>
+			<input name="Prezime" value="{{ row[2] }}" type="text" placeholder="Prezime" autocomplete="off" required>
+		</p>
+		<p>
+			<input name="Adresa" value="{{ row[3] }}" type="text" placeholder="Adresa" autocomplete="off" required>
+		</p>
+		<p>
+			<input name="Mjesto" value="{{ row[4] }}" type="text" placeholder="Mjesto" autocomplete="off" required>
+		</p>
+		<p>
+			<input name="Postanski_broj" value="{{ row[5] }}" type="number" placeholder="Poštanski broj" autocomplete="off" required>
+		</p>		
+    </dl>
+    <p>
+		<input type="submit" value="Submit">
+	</p>
+</form>

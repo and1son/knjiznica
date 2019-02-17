@@ -42,6 +42,58 @@ def izdavanje_obrisi(sifra):
     conn.commit()
     return redirect('/izdavanje')
 
+@app.route ('/izdavanje/dodaj')
+def izdavanje_dodaj():
+    return render_template('izdavanje_dodaj.html')
+
+@app.route('/dodaj_izdavanje', methods=['POST'])
+def insert_izdavanje():
+    if request.method == 'POST':
+        _datum_izdavanja = request.form['datum_izdavanja']
+        _datum_povratka = request.form['datum_povratka']
+        _cijena = request.form['cijena']
+        _izdavatelj = request.form['izdavatelj']
+        sql = '''INSERT INTO izdavanje(datum_izdavanja,datum_povratka,cijena,izdavatelj) VALUES (%s, %s, %s, %s)'''
+        data = (_datum_izdavanja, _datum_povratka, _cijena, _izdavatelj)
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        cursor.execute(sql,data)
+        conn.commit()
+        #flash('user added successfully')
+        return redirect('/izdavanje')
+            #return render_template('/nakladnici')
+    else:
+            return 'Error adding user'
+
+@app.route('/izdavanje_edit/<int:sifra>')
+def edit_izdavanje_view(sifra):
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM izdavanje where sifra=%s",sifra)
+    row = cursor.fetchone()
+    if row:
+        return render_template('izdavanje_edit.html', row=row)
+    else:
+        return 'Error loading #{id}'.format(sifra=sifra)
+
+@app.route('/edit_izdavanje', methods=['POST'])
+def edit_izdavanje():
+    if request.method == 'POST':
+        _datum_izdavanja = request.form['datum_izdavanja']
+        _datum_povratka = request.form['datum_povratka']
+        _cijena = request.form['cijena']
+        _izdavatelj = request.form['izdavatelj']
+        _sifra = request.form['sifra']
+        sql = "UPDATE izdavanje SET datum_izdavanja=%s, datum_povratka=%s, cijena=%s, izdavatelj=%s WHERE sifra=%s"
+        data = (_datum_izdavanja, _datum_povratka, _cijena, _izdavatelj, _sifra)
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        cursor.execute(sql,data)
+        conn.commit()
+        return redirect('/izdavanje')
+    else:
+        return 'Error while updating user'
+
 @app.route('/izdavatelj')
 def izdavatelj():
     cursor = mysql.get_db().cursor()
@@ -68,6 +120,62 @@ def izdavatelj_obrisi(sifra):
     cursor.execute("DELETE FROM izdavatelj where sifra=%s", (sifra))
     conn.commit()
     return redirect('/izdavatelj')
+
+
+@app.route ('/izdavatelj/dodaj')
+def izdavatelj_dodaj():
+    return render_template('izdavatelj_dodaj.html')
+
+@app.route('/dodaj_izdavatelj', methods=['POST'])
+def insert_izdavatelj():
+    if request.method == 'POST':
+        _ime = request.form['Ime']
+        _prezime = request.form['Prezime']
+        _adresa = request.form['Adresa']
+        _mjesto = request.form['Mjesto']
+        _postanskibroj = request.form['Postanski_broj']
+        sql = '''INSERT INTO izdavatelj(Ime,Prezime,Adresa,Mjesto,Postanski_broj) VALUES (%s, %s, %s, %s, %s)'''
+        data = (_ime,_prezime,_adresa,_mjesto,_postanskibroj)
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        cursor.execute(sql,data)
+        conn.commit()
+        #flash('user added successfully')
+        return redirect('/izdavatelj')
+            #return render_template('/nakladnici')
+    else:
+            return 'Error adding user'
+
+@app.route('/izdavatelj_edit/<int:sifra>')
+def izdavatelj_edit_view(sifra):
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM izdavatelj where sifra=%s",sifra)
+    row = cursor.fetchone()
+    if row:
+        return render_template('izdavatelj_edit.html', row=row)
+    else:
+        return 'Error loading #{id}'.format(sifra=sifra)
+
+@app.route('/edit_izdavatelj', methods=['POST'])
+def edit_izdavatelj():
+    if request.method == 'POST':
+        _ime = request.form['Ime']
+        _prezime = request.form['Prezime']
+        _adresa = request.form['Adresa']
+        _mjesto = request.form['Mjesto']
+        _postanskibroj = request.form['Postanski_broj']
+        _sifra = request.form['sifra']
+        sql = "UPDATE izdavatelj SET Ime=%s, Prezime=%s, Adresa=%s, Mjesto=%s, Postanski_broj=%s WHERE sifra=%s"
+        data = (_ime, _prezime, _adresa, _mjesto, _postanskibroj, _sifra)
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        cursor.execute(sql,data)
+        conn.commit()
+        return redirect('/izdavatelj')
+    else:
+        return 'Error while updating user'
+
 
 
 @app.route('/knjiga')
@@ -222,61 +330,6 @@ def edit_nakladnici():
         return redirect('/nakladnici')
     else:
         return 'Error while updating user'
-
-
-
-@app.route ('/izdavanje/dodaj')
-def izdavanje_dodaj():
-    return render_template('izdavanje_dodaj.html')
-
-@app.route('/dodaj_izdavanje', methods=['POST'])
-def insert_izdavanje():
-    if request.method == 'POST':
-        _datum_izdavanja = request.form['datum_izdavanja']
-        _datum_povratka = request.form['datum_povratka']
-        _cijena = request.form['cijena']
-        _izdavatelj = request.form['izdavatelj']
-        sql = '''INSERT INTO izdavanje(datum_izdavanja,datum_povratka,cijena,izdavatelj) VALUES (%s, %s, %s, %s)'''
-        data = (_datum_izdavanja, _datum_povratka, _cijena, _izdavatelj)
-        conn = mysql.connect()
-        cursor = conn.cursor()
-        cursor.execute(sql,data)
-        conn.commit()
-        #flash('user added successfully')
-        return redirect('/izdavanje')
-            #return render_template('/nakladnici')
-    else:
-            return 'Error adding user'
-
-
-
-
-@app.route ('/izdavatelj/dodaj')
-def izdavatelj_dodaj():
-    return render_template('izdavatelj_dodaj.html')
-
-@app.route('/dodaj_izdavatelj', methods=['POST'])
-def insert_izdavatelj():
-    if request.method == 'POST':
-        _ime = request.form['Ime']
-        _prezime = request.form['Prezime']
-        _adresa = request.form['Adresa']
-        _mjesto = request.form['Mjesto']
-        _postanskibroj = request.form['Postanski_broj']
-        sql = '''INSERT INTO izdavatelj(Ime,Prezime,Adresa,Mjesto,Postanski_broj) VALUES (%s, %s, %s, %s, %s)'''
-        data = (_ime,_prezime,_adresa,_mjesto,_postanskibroj)
-        conn = mysql.connect()
-        cursor = conn.cursor()
-        cursor.execute(sql,data)
-        conn.commit()
-        #flash('user added successfully')
-        return redirect('/izdavatelj')
-            #return render_template('/nakladnici')
-    else:
-            return 'Error adding user'
-
-
-
 
 if __name__ == '__main__':
     app.run(debug=True)
