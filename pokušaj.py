@@ -64,3 +64,11 @@ def edit_knjiga():
 cd Documents/Code/knjiznica
 . venv/bin/activate
 python api.py
+
+---
+github
+
+cd Documents/github/knjiznica
+git add .
+git commit - ""
+git push origin master

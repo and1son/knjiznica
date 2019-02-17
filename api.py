@@ -13,22 +13,7 @@ app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 mysql = MySQL()
 mysql.init_app(app)
 
-@app.route('/nakladnici')
-def nakladnici():
-    cursor = mysql.get_db().cursor()
-    cursor.execute('''SELECT * FROM nakladnik''')
-    rv = cursor.fetchall()
-    return jsonify({'results': rv})
 
-@app.route('/nakladnici/<nakladnici_sifra>')
-def nakladnici_sifra(nakladnici_sifra):
-    cursor = mysql.connect().cursor()
-    cursor.execute('''select * FROM nakladnik where sifra = %s ''', (nakladnici_sifra))
-    r = [dict((cursor.description[i][0], value)
-         for i, value in enumerate(row)) for row in cursor.fetchall()]
-    return render_template('nakladnici_sifra.html', nakladnici_sifra=r[0])
-    #return str(r)
-    #return jsonify({'results': r})
   
 @app.route('/izdavanje')
 def izdavanje():
@@ -164,11 +149,29 @@ def knjiga_sifra(sifra):
          for i, value in enumerate(row)) for row in cursor.fetchall()]
     return render_template('knjiga_sifra.html', sifra=r[0])
 
+@app.route('/nakladnici')
+def nakladnici():
+    cursor = mysql.get_db().cursor()
+    cursor.execute('''SELECT * FROM nakladnik''')
+    data = cursor.fetchall()
+    #return jsonify({'results': data})
+    return render_template('nakladnici.html', nakladnici=data)
+
+@app.route('/nakladnici/<nakladnici_sifra>')
+def nakladnici_sifra(nakladnici_sifra):
+    cursor = mysql.connect().cursor()
+    cursor.execute('''select * FROM nakladnik where sifra = %s ''', (nakladnici_sifra))
+    r = [dict((cursor.description[i][0], value)
+         for i, value in enumerate(row)) for row in cursor.fetchall()]
+    return render_template('nakladnici_sifra.html', nakladnici_sifra=r[0])
+    #return str(r)
+    #return jsonify({'results': r})
+
 @app.route ('/nakladnici/dodaj')
 def dodaj_nakladnik_view():
-    return render_template('dodaj.html')
+    return render_template('nakladnici_dodaj.html')
 
-@app.route('/dodaj', methods=['POST'])
+@app.route('/nakladnici_dodaj', methods=['POST'])
 def insert_nakladnici():
     if request.method == 'POST':
         _naziv = request.form['Naziv']
@@ -192,6 +195,33 @@ def nakladnici_obrisi(sifra):
     cursor.execute("DELETE FROM nakladnik where sifra=%s", (sifra))
     conn.commit()
     return redirect('/nakladnici')
+
+@app.route('/nakladnici_edit/<int:sifra>')
+def edit_nakladnici_view(sifra):
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM nakladnik where sifra=%s",sifra)
+    row = cursor.fetchone()
+    if row:
+        return render_template('nakladnici_edit.html', row=row)
+    else:
+        return 'Error loading #{id}'.format(sifra=sifra)
+
+@app.route('/update_nakladnik', methods=['POST'])
+def edit_nakladnici():
+    if request.method == 'POST':
+        _naziv = request.form['Naziv']
+        _mjesto = request.form['Mjesto']
+        _sifra = request.form['sifra']
+        sql = "UPDATE nakladnik SET Naziv=%s, Mjesto=%s WHERE sifra=%s"
+        data = (_naziv, _mjesto, _sifra)
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        cursor.execute(sql,data)
+        conn.commit()
+        return redirect('/nakladnici')
+    else:
+        return 'Error while updating user'
 
 
 

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Nakladnici</title>
+</head>
+<body>
+
+	<table>
+		<tr>
+			<th>Sifra</th>
+			<th>Naslov</th>
+			<th>Mjesto</th>
+		</tr>
+
+		{% for row in nakladnici %}
+		<tr>
+			<td>{{ row[0] }}</td>
+			<td>{{ row[1] }}</td>
+			<td>{{ row[2] }}</td>
+			<td>
+             <a href="/nakladnici_edit/{{ row[0] }}" class="btn btn-warning btn-xs" data-toggle="modal" data-target="
+             #modaledit{{row[0]}}">Edit</a>
+         </td>
+		</tr>
+		
+		{% endfor %}
+
+	</table>
+</body>
+</html>

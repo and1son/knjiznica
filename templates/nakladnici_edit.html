@@ -1,0 +1,20 @@
+<doctype html>
+<title>Edit nakladnika - Python Flask MySQL CRUD</title>
+<h2>Edit nakladnika</h2>
+<form method="post" action="/update_nakladnik">
+    <dl>
+		<p>
+			<input name="sifra" value="{{ row[0] }}" type="hidden">
+			<input name="Naziv" value="{{ row[1] }}" type="text" placeholder="Naziv" autocomplete="off" required>
+		</p>
+		<p>
+			<input name="Mjesto" value="{{ row[2] }}" type="text" placeholder="Mjesto" autocomplete="off" required>
+		</p>
+		<td>
+ 
+        </td>
+    </dl>
+    <p>
+		<input type="submit" value="Submit">
+	</p>
+</form>
