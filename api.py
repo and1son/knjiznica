@@ -23,7 +23,7 @@ def index():
             session['user'] = request.form['username']
             return redirect(url_for('protected'))
 
-        if request.form['password'] == 'admin':
+        if request.form['password'] == 'admin' and request.form['username'] == 'admin':
             session['admin'] = request.form['username']
             return redirect(url_for('protected'))
 
@@ -79,7 +79,7 @@ def izdavanje():
         cursor.execute('''SELECT * FROM izdavanje''')
         data = cursor.fetchall()
         return render_template('izdavanje.html', izdavanje=data)
-
+    flash("You  have credentials to access this page")
     return redirect(url_for('index'))
 
 
@@ -163,21 +163,25 @@ def edit_izdavanje():
 
 @app.route('/izdavatelj')
 def izdavatelj():
-    cursor = mysql.get_db().cursor()
-    cursor.execute('''SELECT * FROM izdavatelj''')
-    data = cursor.fetchall()
-    return render_template('izdavatelj.html', izdavatelj=data)
+    if g.user or g.admin or g.employee:
+        cursor = mysql.get_db().cursor()
+        cursor.execute('''SELECT * FROM izdavatelj''')
+        data = cursor.fetchall()
+        return render_template('izdavatelj.html', izdavatelj=data)
+    return redirect(url_for('index'))
 
 
 @app.route('/izdavatelj/<sifra>')
 def izdavatelj_sifra(sifra):
-    cursor = mysql.get_db().cursor()
-    cursor.execute('''SELECT * FROM izdavatelj where sifra = %s''', (sifra))
-    r = [dict((cursor.description[i][0], value)
-    	 for i, value in enumerate(row)) for row in cursor.fetchall()]
-    return render_template('izdavatelj_sifra.html', sifra=r[0])
-    #return str(data)
-    #return str(rv)
+    if g.user or g.admin or g.employee:
+        cursor = mysql.get_db().cursor()
+        cursor.execute('''SELECT * FROM izdavatelj where sifra = %s''', (sifra))
+        r = [dict((cursor.description[i][0], value)
+             for i, value in enumerate(row)) for row in cursor.fetchall()]
+        return render_template('izdavatelj_sifra.html', sifra=r[0])
+        #return str(data)
+        #return str(rv)
+    return redirect(url_for('index'))
 
 @app.route('/izdavatelj/obrisi/<int:sifra>')
 def izdavatelj_obrisi(sifra):
@@ -251,10 +255,13 @@ def edit_izdavatelj():
 
 @app.route('/knjiga')
 def knjiga():
-    cursor = mysql.get_db().cursor()
-    cursor.execute('''SELECT * FROM knjiga ''')
-    data = cursor.fetchall()
-    return render_template('knjiga.html', knjiga=data)
+    if g.user or g.admin or g.employee:
+        cursor = mysql.get_db().cursor()
+        cursor.execute('''SELECT * FROM knjiga ''')
+        data = cursor.fetchall()
+        return render_template('knjiga.html', knjiga=data)
+    return redirect(url_for('index'))
+
 
 @app.route ('/knjiga/dodaj')
 def dodaj_knjiga_view():
@@ -328,29 +335,48 @@ def obrisi_knjiga(sifra):
 
 @app.route('/knjiga/<sifra>')
 def knjiga_sifra(sifra):
-    cursor = mysql.get_db().cursor()
-    cursor.execute(''' SELECT * FROM knjiga where sifra = %s ''', (sifra))
-    r = [dict((cursor.description[i][0], value)
-         for i, value in enumerate(row)) for row in cursor.fetchall()]
-    return render_template('knjiga_sifra.html', sifra=r[0])
+    if g.user or g.admin or g.employee:
+        cursor = mysql.get_db().cursor()
+        cursor.execute(''' SELECT * FROM knjiga where sifra = %s ''', (sifra))
+        r = [dict((cursor.description[i][0], value)
+             for i, value in enumerate(row)) for row in cursor.fetchall()]
+        return render_template('knjiga_sifra.html', sifra=r[0])
+    return redirect(url_for('index'))
+
+@app.route('/search', methods=['GET', 'POST'])
+def search():
+    if g.admin or g.employee:
+        if request.method == "POST":
+            conn = mysql.connect()
+            cursor = conn.cursor()
+            search = '%%' + request.form['search'] + '%%'
+            cursor.execute("""SELECT * FROM knjiga where Naslov LIKE %s;""", (search))
+
+            #conn.commit()
+            return render_template('knjiga.html', records=cursor.fetchall())
+    return redirect(url_for('index'))
 
 @app.route('/nakladnici')
 def nakladnici():
-    cursor = mysql.get_db().cursor()
-    cursor.execute('''SELECT * FROM nakladnik''')
-    data = cursor.fetchall()
-    #return jsonify({'results': data})
-    return render_template('nakladnici.html', nakladnici=data)
+    if g.user or g.admin or g.employee:
+        cursor = mysql.get_db().cursor()
+        cursor.execute('''SELECT * FROM nakladnik''')
+        data = cursor.fetchall()
+        #return jsonify({'results': data})
+        return render_template('nakladnici.html', nakladnici=data)
+    return redirect(url_for('index'))
 
 @app.route('/nakladnici/<nakladnici_sifra>')
 def nakladnici_sifra(nakladnici_sifra):
-    cursor = mysql.connect().cursor()
-    cursor.execute('''select * FROM nakladnik where sifra = %s ''', (nakladnici_sifra))
-    r = [dict((cursor.description[i][0], value)
-         for i, value in enumerate(row)) for row in cursor.fetchall()]
-    return render_template('nakladnici_sifra.html', nakladnici_sifra=r[0])
+    if g.user or g.admin or g.employee:
+        cursor = mysql.connect().cursor()
+        cursor.execute('''select * FROM nakladnik where sifra = %s ''', (nakladnici_sifra))
+        r = [dict((cursor.description[i][0], value)
+             for i, value in enumerate(row)) for row in cursor.fetchall()]
+        return render_template('nakladnici_sifra.html', nakladnici_sifra=r[0])
     #return str(r)
     #return jsonify({'results': r})
+    return redirect(url_for('index'))
 
 @app.route ('/nakladnici/dodaj')
 def dodaj_nakladnik_view():
