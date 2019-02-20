@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+{%block concent %}
+<div class="row">
+	
+	<h2>Welcome</h2>
+	{% if session['name'] %}
+	<p> You login as {{ session['name'] }}</p>
+	{% else %}
+	<p>Not login yet</p>
+	{% endif %}
+	
+</div>
+{% endblock %}
+</body>
+</html>
+
