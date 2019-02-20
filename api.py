@@ -350,9 +350,7 @@ def search():
             conn = mysql.connect()
             cursor = conn.cursor()
             search = '%%' + request.form['search'] + '%%'
-            cursor.execute("""SELECT * FROM knjiga where Naslov LIKE %s;""", (search))
-
-            #conn.commit()
+            cursor.execute("""SELECT * FROM knjiga where (Naslov LIKE %s) or (Zanr LIKE %s) or (Autor LIKE %s);""", (search, search, search))
             return render_template('knjiga.html', records=cursor.fetchall())
     return redirect(url_for('index'))
 
