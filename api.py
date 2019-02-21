@@ -1,8 +1,10 @@
-from flask import Flask, render_template, request, redirect, flash, session, url_for, g
+from flask import Flask, render_template, request, redirect, flash, session, url_for, g, jsonify, make_response
 from flaskext.mysql import MySQL
 from pymysql.cursors import DictCursor
 import bcrypt
-from flask import jsonify
+import jwt
+import datetime
+from functools import wraps
 
 app = Flask(__name__)
 
@@ -12,9 +14,56 @@ app.config['MYSQL_DATABASE_PASSWORD'] = 'andibasic'
 app.config['MYSQL_DATABASE_DB'] = 'test'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
+app.config['SECRET_KEY'] = 'ovojesecretkey'
+
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.args.get('token')
+
+        if not token:
+            return jsonify({'message' : 'Token is missing'}), 403
+
+        try:
+            data = jwt.decode(token, app.config['SECRET_KEY'])
+
+        except:
+            return jsonfiy({'messege' : 'Token is invalid'}), 403
+        return f(*args, **kwargs)
+
+    return decorated
 
 mysql = MySQL(cursorclass=DictCursor)
 mysql.init_app(app)
+
+@app.route('/unprotected')
+def unprotected():
+    return jsonify({'message' : 'Anyone can view this!'})
+
+@app.route('/protected')
+@token_required
+def protected():
+    return jsonify({'message' : 'This is only avaiable for people with valid tokens.'})
+
+@app.route('/login2')
+def login2():
+    auth = request.authorization
+
+    if auth and auth.password == 'password':
+        token = jwt.encode({'user' : auth.username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=60)}, app.config['SECRET_KEY'])
+        return jsonify({'token' : token.decode('UTF-8')})
+
+    return make_response('Couldn verify', 401, {'WWW-Authenticate' : 'Basic realm="Login Required"'})
+
+@app.route('/users', methods=["GET"])
+def getUsers():
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("select * from korisnici")
+    data = cursor.fetchall()  
+    conn.commit()
+    return jsonify({'podaci' : data})
+
 
 ''' 
 @app.route('/', methods=['GET', 'POST'])
@@ -76,7 +125,7 @@ def dropsession():
     return 'Dropped!'
     '''
 
-@app.route('/')
+'''@app.route('/')
 def home():
     return render_template('home.html')
 
@@ -107,7 +156,6 @@ def login():
         cursor.execute("SELECT * FROM korisnici WHERE email=%s",(email))
         user = cursor.fetchone()
         cursor.close()
-        
 
         if len(user) > 0:
             if bcrypt.hashpw(password, user['password']) == user['password']:
@@ -127,14 +175,14 @@ def logout():
     session.clear()
     return render_template("home.html")
 
-
+'''
 @app.route('/izdavanje')
 def izdavanje():
     #if g.user or g.admin or g.employee:
-        cursor = mysql.get_db().cursor()
-        cursor.execute('''SELECT * FROM izdavanje''')
-        data = cursor.fetchall()
-        return render_template('izdavanje.html', izdavanje=data)
+    cursor = mysql.get_db().cursor()
+    cursor.execute('''SELECT * FROM izdavanje''')
+    data = cursor.fetchall()
+    return render_template('izdavanje.html', izdavanje=data)
     #flash("You dont have credentials to access this page")
     #return redirect(url_for('index'))
 
@@ -157,6 +205,7 @@ def izdavanje_obrisi(sifra):
         conn = mysql.connect()
         cursor = conn.cursor()
         cursor.execute("DELETE FROM izdavanje where sifra=%s", (sifra))
+
         conn.commit()
         return redirect('/izdavanje')
     return redirect(url_for('index'))
@@ -497,5 +546,4 @@ def edit_nakladnici():
         return 'Error while updating user'
 
 if __name__ == '__main__':
-    app.secret_key ="asdklaASD023#!^"
     app.run(debug=True)

@@ -48,8 +48,10 @@ create table korisnici(
 	sifra int not null primary key auto_increment,
 	name varchar(50) not null,
 	email varchar(32) not null,
-	password varchar(100) not null
+	password varchar(100) not null,
+	role varchar(20) default 'user'
 );
+
 
 alter table knjiga ADD FOREIGN KEY (nakladnik) REFERENCES nakladnik(sifra);
 alter table knjiga ADD FOREIGN KEY (izdavanje) REFERENCES izdavanje(sifra);
@@ -103,9 +105,6 @@ INSERT INTO knjiga(Naslov,Zanr,Autor,nakladnik,izdavanje) VALUES('Naslov5','Zanr
 INSERT INTO knjiga(Naslov,Zanr,Autor,nakladnik,izdavanje) VALUES('Naslov6','Zanr6','Autor6',4 ,2 );
 INSERT INTO knjiga(Naslov,Zanr,Autor,nakladnik,izdavanje) VALUES('Naslov7','Zanr7','Autor7',6 ,1 );
 INSERT INTO knjiga(Naslov,Zanr,Autor,nakladnik,izdavanje) VALUES('Naslov8','Zanr8','Autor8',7 ,4 );
-
-
-
 
 
 

@@ -9,7 +9,9 @@
 	
 	<h2>Welcome</h2>
 	{% if session['name'] %}
-	<p> You login as {{ session['name'] }}</p>
+	<p> Your login name is {{ session['name'] }}</p>
+	<p> Your login email is {{ session['email'] }}</p>
+
 	{% else %}
 	<p>Not login yet</p>
 	{% endif %}
