@@ -1,12 +1,17 @@
 from flask import Flask, render_template, request, redirect, flash, session, url_for, g, jsonify, make_response
+from flask_basic_roles import BasicRoleAuth
 from flaskext.mysql import MySQL
 from pymysql.cursors import DictCursor
 import bcrypt
 import jwt
 import datetime
 from functools import wraps
+from werkzeug.security import generate_password_hash, check_password_hash
+import uuid
+from passlib.hash import sha256_crypt
 
 app = Flask(__name__)
+auth = BasicRoleAuth()
 
 
 app.config['MYSQL_DATABASE_USER'] = 'root'
@@ -14,22 +19,30 @@ app.config['MYSQL_DATABASE_PASSWORD'] = 'andibasic'
 app.config['MYSQL_DATABASE_DB'] = 'test'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
-app.config['SECRET_KEY'] = 'ovojesecretkey'
+app.config['SECRET_KEY'] = 'ovojesecretkey1'
 
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = request.args.get('token')
+        token = None
+
+        if 'x-access-token' in request.headers:
+            token = request.headers['x-access-token']
+
 
         if not token:
             return jsonify({'message' : 'Token is missing'}), 403
 
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'])
+            current_user = get_jwt_identity()
+            access_token = create_access_token(identity=username)
+
+       
 
         except:
             return jsonfiy({'messege' : 'Token is invalid'}), 403
-        return f(*args, **kwargs)
+        return f(current_user, *args, **kwargs)
 
     return decorated
 
@@ -46,23 +59,89 @@ def protected():
     return jsonify({'message' : 'This is only avaiable for people with valid tokens.'})
 
 @app.route('/login2')
+
 def login2():
     auth = request.authorization
 
-    if auth and auth.password == 'password':
+    if not auth or not auth.username or not auth.password:
+        return make_response('Could not verify', 401, {'WWW-Authenticate' : 'Basic realm="Login required!"'})
+
+
+    if auth and auth.username =='korisnik' and auth.password == 'korisnik':
         token = jwt.encode({'user' : auth.username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=60)}, app.config['SECRET_KEY'])
         return jsonify({'token' : token.decode('UTF-8')})
 
     return make_response('Couldn verify', 401, {'WWW-Authenticate' : 'Basic realm="Login Required"'})
 
+@app.route('/user', methods=['POST'])
+def createUser():
+    data = request.get_json()
+    
+    username = request.json.get('username', None)
+    email = request.json.get('email', None)
+    password = request.json.get('password', None)
+    hashed_password = sha256_crypt.encrypt(data['password'])
+    #hashed_password = generate_password_hash(data['password'], method='sha256')
+    admin = request.json.get('admin', None)
+    #hash_password = bcrypt.hashpw(password, bcrypt.gensalt())
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO korisnici (username,email,password,admin) VALUES (%s,%s,%s,%s)", (username,email,hashed_password,admin))
+    conn.commit()
+    session['username'] = username
+    return jsonify({'message' : 'New user created!'})
+
+@app.route('/login', methods=["GET","POST"])
+def login_page():
+    error = ''
+    try:
+        
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        if request.method == "GET":
+
+            username = request.json.get('username', None)
+            password = request.json.get('password', None)
+
+
+            data = cursor.execute("SELECT * FROM korisnici WHERE username = %s",
+                             username)
+            
+            data = cursor.fetchone()
+
+            #return jsonify({'data ' : data['password']})
+            #return jsonify({'data ' : data[0][2]})
+
+            #return jsonify({'data ' : password})
+
+            if sha256_crypt.verify(password, data['password']):
+                #session['logged_in'] = True
+                #session['name'] = username
+                token = jwt.encode({'username' : username, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=60)}, app.config['SECRET_KEY'])
+
+                #flash("You are now logged in")
+                #return redirect(url_for("dashboard"))
+
+            else:
+                error = "Invalid credentials, try again."
+
+        return jsonify({'token' : token.decode('UTF-8')})
+            
+    except Exception as e:
+        #flash(e)
+        error = "Invalid credentials, try again."
+        return str(e)
+
+
 @app.route('/users', methods=["GET"])
+@token_required
 def getUsers():
     conn = mysql.connect()
     cursor = conn.cursor()
     cursor.execute("select * from korisnici")
-    data = cursor.fetchall()  
+    user = cursor.fetchall()  
     conn.commit()
-    return jsonify({'podaci' : data})
+    return jsonify({'podaci' : user})
 
 
 ''' 
