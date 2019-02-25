@@ -46,6 +46,7 @@ create table izdavanje(
 
 create table korisnici(
 	sifra int not null primary key auto_increment,
+	public_id varchar(50) not null unique,
 	username varchar(50) not null,
 	email varchar(32) not null unique,
 	password varchar(100) not null,

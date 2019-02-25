@@ -9,6 +9,9 @@ from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
 from passlib.hash import sha256_crypt
+from flask_jwt_extended import (
+    JWTManager, jwt_optional, create_access_token,
+    get_jwt_identity)
 
 app = Flask(__name__)
 auth = BasicRoleAuth()
@@ -35,14 +38,12 @@ def token_required(f):
 
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'])
-            current_user = get_jwt_identity()
-            access_token = create_access_token(identity=username)
-
-       
+            #current_user = get_jwt_identity()
+            #access_token = create_access_token(identity=username)
 
         except:
-            return jsonfiy({'messege' : 'Token is invalid'}), 403
-        return f(current_user, *args, **kwargs)
+            return jsonify({'messege' : 'Token is invalid'}), 403
+        return f(*args, **kwargs)
 
     return decorated
 
@@ -76,7 +77,8 @@ def login2():
 @app.route('/user', methods=['POST'])
 def createUser():
     data = request.get_json()
-    
+
+    public_id = str(uuid.uuid4().fields[-1])[:5] 
     username = request.json.get('username', None)
     email = request.json.get('email', None)
     password = request.json.get('password', None)
@@ -86,7 +88,7 @@ def createUser():
     #hash_password = bcrypt.hashpw(password, bcrypt.gensalt())
     conn = mysql.connect()
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO korisnici (username,email,password,admin) VALUES (%s,%s,%s,%s)", (username,email,hashed_password,admin))
+    cursor.execute("INSERT INTO korisnici (public_id, username,email,password,admin) VALUES (%s, %s,%s,%s,%s)", (public_id,username,email,hashed_password,admin))
     conn.commit()
     session['username'] = username
     return jsonify({'message' : 'New user created!'})
@@ -132,8 +134,16 @@ def login_page():
         error = "Invalid credentials, try again."
         return str(e)
 
+@app.route('/partially-protected', methods=['GET'])
+def partially_protected():
+    current_user = get_jwt_identity()
+    if current_user:
+        return jsonify(logged_in_as=current_user),200
+    else:
+        return jsonify(logged_in_as='annonymous user'), 200
 
-@app.route('/users', methods=["GET"])
+
+@app.route('/user', methods=["GET"])
 @token_required
 def getUsers():
     conn = mysql.connect()
@@ -141,7 +151,28 @@ def getUsers():
     cursor.execute("select * from korisnici")
     user = cursor.fetchall()  
     conn.commit()
-    return jsonify({'podaci' : user})
+    return jsonify({'korisnici' : user})
+
+@app.route('/user/<public_id>', methods=['GET'])
+@token_required
+def get_one_user(public_id):
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    user = cursor.execute("SELECT * FROM korisnici WHERE public_id = %s", public_id)            
+    user = cursor.fetchone()
+    if not user:
+        return jsonify({'message' : 'No user found!'})
+    return jsonify({'user' : user})
+
+@app.route('/knjigee', methods=["GET"])
+@token_required
+def knjige_sve():
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("select * from knjiga")
+    knjiga = cursor.fetchall()
+    conn.commit()
+    return jsonify({'knjige' : knjiga})
 
 
 ''' 
