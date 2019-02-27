@@ -23,6 +23,7 @@ app.config['MYSQL_DATABASE_DB'] = 'test'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 app.config['SECRET_KEY'] = 'ovojesecretkey1'
+#jwt = JWTManager(app)
 
 def token_required(f):
     @wraps(f)
@@ -77,7 +78,6 @@ def login2():
 @app.route('/user', methods=['POST'])
 def createUser():
     data = request.get_json()
-
     public_id = str(uuid.uuid4().fields[-1])[:5] 
     username = request.json.get('username', None)
     email = request.json.get('email', None)
@@ -105,15 +105,12 @@ def login_page():
             username = request.json.get('username', None)
             password = request.json.get('password', None)
 
-
             data = cursor.execute("SELECT * FROM korisnici WHERE username = %s",
                              username)
-            
             data = cursor.fetchone()
 
             #return jsonify({'data ' : data['password']})
             #return jsonify({'data ' : data[0][2]})
-
             #return jsonify({'data ' : password})
 
             if sha256_crypt.verify(password, data['password']):
@@ -136,12 +133,16 @@ def login_page():
 
 @app.route('/partially-protected', methods=['GET'])
 def partially_protected():
-    current_user = get_jwt_identity()
+    data = jwt.decode(token, app.config['SECRET_KEY'])
+    return jsonify(data)
+   
+    '''current_user = get_jwt_identity()
+    return jsonify({'user' : current_user})
     if current_user:
         return jsonify(logged_in_as=current_user),200
     else:
         return jsonify(logged_in_as='annonymous user'), 200
-
+    '''
 
 @app.route('/user', methods=["GET"])
 @token_required
@@ -163,6 +164,17 @@ def get_one_user(public_id):
     if not user:
         return jsonify({'message' : 'No user found!'})
     return jsonify({'user' : user})
+
+@app.route('/user/<public_id>', methods=['PUT'])
+@token_required
+def set_admin_to_user(public_id):
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE korisnici SET admin = '1' WHERE public_id = %s", public_id)            
+    user = cursor.fetchone()
+    conn.commit()
+    return jsonify('Uloga je promijenjena')
+
 
 @app.route('/knjigee', methods=["GET"])
 @token_required
